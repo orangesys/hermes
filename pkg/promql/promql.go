@@ -41,6 +41,8 @@ func (v *QueryRangeResponseValue) Value() (float64, error) {
 	return f, nil
 }
 
+// QueryRange is count nodes every day, default step 1h with prome unit stripe
+// TODO env addr
 func QueryRange(query string, start, end int64) (*QueryRangeResponse, error) {
 	u, err := url.Parse(fmt.Sprintf("http://127.0.0.1:9090/api/v1/query_range?query=%s&start=%s&end=%s&step=%s",
 		url.QueryEscape(query),
@@ -50,7 +52,6 @@ func QueryRange(query string, start, end int64) (*QueryRangeResponse, error) {
 	))
 	if err != nil {
 		return nil, err
-		// fmt.Println(err)
 	}
 
 	var Server *url.URL
@@ -58,22 +59,18 @@ func QueryRange(query string, start, end int64) (*QueryRangeResponse, error) {
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		return nil, err
-		// fmt.Println(err)
 	}
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
-		// fmt.Println(err)
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		if err == io.EOF {
 			return &QueryRangeResponse{}, nil
-			// fmt.Println(res)
 		}
 		return nil, err
-		// fmt.Println(err)
 	}
 
 	if 400 <= res.StatusCode {
