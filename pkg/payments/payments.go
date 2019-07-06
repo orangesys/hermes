@@ -75,6 +75,7 @@ func AddSource(cardNumber, expMonth, expYear, cvc, stripeCustomerID string) (*st
 
 //Addsubscription add subscription with customer by monthly
 func Addsubscription(planID, stripeCustomerID string) (string, error) {
+	stripe.Key = "sk_test_ljCYC27PV9LBxE1XYAA813jq"
 	subParams := &stripe.SubscriptionParams{
 		Customer: stripe.String(stripeCustomerID),
 		Items: []*stripe.SubscriptionItemsParams{
@@ -90,8 +91,11 @@ func Addsubscription(planID, stripeCustomerID string) (string, error) {
 	return s.Items.Data[0].ID, nil
 }
 
-//UsageRecord create usage record daily by cusmtomer
-func DailyUsageRecord(subItemID, stripeCustomerID string, quantity int64) error {
+//AddUsageRecord create usage record daily by cusmtomer
+// PromQL:	count(node_boot_time_seconds)
+// 			count(node_boot_time_seconds)[24h:1h]
+func AddUsageRecord(subItemID, stripeCustomerID string, quantity int64) error {
+	stripe.Key = "sk_test_ljCYC27PV9LBxE1XYAA813jq"
 	params := &stripe.UsageRecordParams{
 		Quantity:         stripe.Int64(quantity),
 		SubscriptionItem: stripe.String(subItemID),
