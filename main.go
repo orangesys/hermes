@@ -1,147 +1,158 @@
 package main
 
 import (
-	// "fmt"
-
 	"fmt"
+	"net/http"
 
-	"github.com/orangesys/hermes/pkg/payments"
+	"github.com/orangesys/hermes/routers"
 )
 
-// // CreateCustomer with email , unique email
-// func CreateCustomer(email string) (cust *stripe.Customer, err error) {
-// 	stripe.Key = "sk_test_ljCYC27PV9LBxE1XYAA813jq"
-// 	fmt.Println(stripe.Key)
-
-// 	if err := customerIsExist(email); err != nil {
-// 		return nil, err
-// 	}
-// 	newCustomerParams := &stripe.CustomerParams{
-// 		Email: stripe.String(email),
-// 	}
-
-// 	if cust, err = customer.New(newCustomerParams); err != nil {
-// 		return nil, err
-// 	}
-// 	return cust, err
-// }
-
-// // customerIsExist
-// func customerIsExist(email string) error {
-// 	stripe.Key = "sk_test_ljCYC27PV9LBxE1XYAA813jq"
-
-// 	params := &stripe.CustomerListParams{}
-// 	params.Filters.AddFilter("email", "", email)
-// 	i := customer.List(params)
-
-// 	if i.Next() {
-// 		return fmt.Errorf("%s is exsiter.", email)
-// 	}
-// 	return nil
-// }
-
-// //AddSource is add card to customer
-// func AddSource(cardNumber, expMonth, expYear, cvc, stripeCustomerID string) (*stripe.PaymentSource, error) {
-// 	stripe.Key = "sk_test_ljCYC27PV9LBxE1XYAA813jq"
-
-// 	tokenParams := &stripe.TokenParams{
-// 		Card: &stripe.CardParams{
-// 			Number:   stripe.String(cardNumber),
-// 			ExpMonth: stripe.String(expMonth),
-// 			ExpYear:  stripe.String(expYear),
-// 			CVC:      stripe.String(cvc),
-// 		},
-// 	}
-// 	t, err := token.New(tokenParams)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	customerSourceParams := &stripe.CustomerSourceParams{
-// 		Customer: stripe.String(stripeCustomerID),
-// 		Source: &stripe.SourceParams{
-// 			Token: stripe.String(t.ID),
-// 		},
-// 	}
-
-// 	return paymentsource.New(customerSourceParams)
-// }
-
-// //Addsubscription add subscription with customer by monthly
-// func Addsubscription(planID, stripeCustomerID string) (string, error) {
-// 	subParams := &stripe.SubscriptionParams{
-// 		Customer: stripe.String(stripeCustomerID),
-// 		Items: []*stripe.SubscriptionItemsParams{
-// 			{
-// 				Plan: stripe.String(planID),
-// 			},
-// 		},
-// 	}
-// 	s, err := sub.New(subParams)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	return s.Items.Data[0].ID, nil
-// }
-
-// //UsageRecord create usage record daily by cusmtomer
-// func DailyUsageRecord(subItemID, stripeCustomerID string, quantity int64) error {
-// 	params := &stripe.UsageRecordParams{
-// 		Quantity:         stripe.Int64(quantity),
-// 		SubscriptionItem: stripe.String(subItemID),
-// 		Timestamp:        stripe.Int64(time.Now().Unix()),
-// 	}
-
-// 	if _, err := usagerecord.New(params); err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
+// "github.com/orangesys/hermes/pkg/db"
 
 func main() {
-	// stripe.Key = "sk_test_ljCYC27PV9LBxE1XYAA813jq"
+	router := routers.InitRouter()
 
-	// Create UsageRecord
-	// params := &stripe.UsageRecordParams{
-	// 	Quantity:  stripe.Int64(20),
-	// 	Timestamp: stripe.Int64(1564458167), // timestamp 2019 7/30
-	// 	// SubscriptionItem: stripe.String(s.Items.Data[0].ID),
-	// 	SubscriptionItem: stripe.String("si_FLyG6ZyMl6CtH5"),
-	// }
+	s := &http.Server{
+		Addr:    fmt.Sprintf(":%d", 8080),
+		Handler: router,
+	}
+	s.ListenAndServe()
 
-	// record, err := usagerecord.New(params)
+	// currentTime := time.Now()
+	// fmt.Println(currentTime)
+	// start, end := oneDaysAgoTimestamp(currentTime)
+
+	// // count prometheus server with usage record
+	// // count(kube_pod_start_time{pod=~"prometheus-k8s.*"})
+
+	// query := "count(node_boot_time_seconds)"
+	// server := "http://127.0.0.1:9090"
+
+	// client, err := promql.NewClient(server)
 	// if err != nil {
 	// 	fmt.Println(err)
-	// } else {
-	// 	fmt.Println(record)
+	// }
+
+	// resp, err := client.QueryRange(query, start, end)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// type valueEntry struct {
+	// 	Metric map[string]string `json:"metric"`
+	// 	Value  float64           `json:"value`
+	// }
+
+	// type timeEntry struct {
+	// 	Time   int64         `jsno:"time"`
+	// 	Values []*valueEntry `json:"values"`
+	// }
+
+	// entryByTime := map[int64]*timeEntry{}
+	// var nodes float64
+	// // Save count node number to firestore
+	// // Show billing with app.orangesys.io dashboard
+	// for _, r := range resp.Data.Result {
+	// 	for _, v := range r.Values {
+	// 		t := v.Time()
+	// 		u := t.Unix()
+	// 		e, ok := entryByTime[u]
+
+	// 		if !ok {
+	// 			e = &timeEntry{
+	// 				Time:   u,
+	// 				Values: []*valueEntry{},
+	// 			}
+	// 			entryByTime[u] = e
+	// 		}
+	// 		val, err := v.Value()
+	// 		nodes = nodes + val
+	// 		if err != nil {
+	// 			fmt.Println(err)
+	// 		}
+	// 		e.Values = append(e.Values, &valueEntry{
+	// 			Metric: r.Metric,
+	// 			Value:  val,
+	// 		})
+	// 	}
+	// }
+	// fmt.Printf("count node by 24H is %v\n", nodes)
+
+	// s := make([]*timeEntry, len(entryByTime))
+	// i := 0
+	// for _, e := range entryByTime {
+	// 	s[i] = e
+	// 	i++
+	// }
+
+	// b, err := json.Marshal(s)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Println(string(b))
+	// fmt.Println(res.Body)
+
+	// data := map[string]interface{}{
+	// 	"email":       "gavin.zhou@gmail.com",
+	// 	"companyName": "Orangesys Inc.",
+	// 	"payments": map[string]interface{}{
+	// 		"customerID":     "cus_FM1aNamxCy9S2S",
+	// 		"subscriptionID": "sub_FM6vmkb99rb7K3",
+	// 	},
+	// 	"planID":          "promunit",
+	// 	"prometheusLable": "orangesys",
+	// 	"telegrafToken":   "orangesys-token",
+	// 	"subDomain":       "demo",
+	// }
+
+	// if err := db.UpdateDB("YZ3KuBygNIOhVvSjvxjl", data); err != nil {
+	// 	log.Fatalf("Failed adding aturing: %v", err)
 	// }
 
 	// create customer with email, email is unique
-	if cus, err := payments.CreateCustomer("hogehoge1@example.com"); err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println(cus.ID)
-	}
+	// if cus, err := payments.CreateCustomer("hogehoge1@example.com"); err != nil {
+	// 	fmt.Println(err)
+	// } else {
+	// 	fmt.Println(cus.ID)
+	// }
 
 	// cardNumber, expMonth, expYear, cvc, stripeCustomerID string
-	// if _, err := AddSource("4242424242424242", "11", "23", "123", "cus_FM1aNamxCy9S2S"); err != nil {
+	// if _, err := payments.AddSource("4242424242424242", "11", "23", "123", "cus_FM1aNamxCy9S2S"); err != nil {
 	// 	fmt.Println(err)
 	// }
 
 	//addsubscription
-	// if subItemID, err := Addsubscription("promeunit", "cus_FM1aNamxCy9S2S"); err != nil {
+	// if subItemID, err := payments.Addsubscription("promeunit", "cus_FM1aNamxCy9S2S"); err != nil {
 	// 	fmt.Println(err)
 	// } else {
 	// 	fmt.Println(subItemID)
 	// }
 
-	//DailyUsageRecord
-	var q int64 = 100
-	if err := payments.DailyUsageRecord("si_FM6vfuQW7M6R7u", "cus_FM1aNamxCy9S2S", q); err != nil {
-		fmt.Printf("cat not create %d usage record with %s", q, "cus_FM1aNamxCy9S2S")
-	} else {
-		fmt.Printf("create %d unit with %s", q, "cus_FM1aNamxCy9S2S")
-	}
+	//AddUsageRecord
+	// var q int64 = 100
+	// q := int64(nodes)
+	// customerid := "cus_FM1aNamxCy9S2S"
+	// subscriptionid := "si_FM6vfuQW7M6R7u"
+
+	// if err := payments.AddUsageRecord(subscriptionid, customerid, q); err != nil {
+	// 	fmt.Printf("cat not create %d usage record with %s", q, customerid)
+	// } else {
+	// 	fmt.Printf("create %d unit with %s", q, customerid)
+	// }
+
+	//ListUsageREcord
+	// stripe.Key = "sk_test_ljCYC27PV9LBxE1XYAA813jq"
+
+	// params := &stripe.UsageRecordSummaryListParams{
+	// 	SubscriptionItem: stripe.String(subscriptionid),
+	// }
+	// // params.Filters.AddFilter("limit", "", "3")
+	// // params.Filters.AddFilter("ending_before", "", "1562284800")
+	// i := usagerecordsummary.List(params)
+	// for i.Next() {
+	// 	u := i.UsageRecordSummary()
+	// 	fmt.Println(u)
+	// 	fmt.Println(u.Period)
+	// }
 
 	// TODO: Customer IDなどのカスタマー情報をDBに保存する
 
