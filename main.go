@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/orangesys/hermes/routers"
 )
@@ -16,7 +17,10 @@ func main() {
 		Addr:    fmt.Sprintf(":%d", 8080),
 		Handler: router,
 	}
-	s.ListenAndServe()
+	if err := s.ListenAndServe(); err != nil {
+		fmt.Printf("can not run hermes server: %v\n", err)
+		os.Exit(33)
+	}
 
 	// currentTime := time.Now()
 	// fmt.Println(currentTime)
