@@ -11,6 +11,20 @@ import (
 	"time"
 )
 
+type Client struct {
+	Server *url.URL
+}
+
+func NewClient(addr string) (*Client, error) {
+	u, err := url.Parse(addr)
+	if err != nil {
+		return nil, err
+	}
+	return &Client{
+		Server: u,
+	}, nil
+}
+
 type QueryRangeResponse struct {
 	Status string                  `json:"status"`
 	Data   *QueryRangeResponseData `json:"data"`
@@ -43,8 +57,8 @@ func (v *QueryRangeResponseValue) Value() (float64, error) {
 
 // QueryRange is count nodes every day, default step 1h with prome unit stripe
 // TODO env addr
-func QueryRange(query string, start, end int64) (*QueryRangeResponse, error) {
-	u, err := url.Parse(fmt.Sprintf("http://127.0.0.1:9090/api/v1/query_range?query=%s&start=%s&end=%s&step=%s",
+func (c *Client) QueryRange(query string, start, end int64) (*QueryRangeResponse, error) {
+	u, err := url.Parse(fmt.Sprintf("./api/v1/query_range?query=%s&start=%s&end=%s&step=%s",
 		url.QueryEscape(query),
 		url.QueryEscape(fmt.Sprintf("%d", start)),
 		url.QueryEscape(fmt.Sprintf("%d", end)),
@@ -54,8 +68,7 @@ func QueryRange(query string, start, end int64) (*QueryRangeResponse, error) {
 		return nil, err
 	}
 
-	var Server *url.URL
-	u = Server.ResolveReference(u)
+	u = c.Server.ResolveReference(u)
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		return nil, err
