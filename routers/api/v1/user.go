@@ -8,7 +8,7 @@ import (
 
 // User is firebase database
 type User struct {
-	Email       string `json:"email" binding:"required"`
+	Email       string `json:"email" binding:"required,email"`
 	PlanID      string `json:"planid" binding:"required"`
 	CompanyName string `json:"companyname" binding:"required"`
 	CardNumber  string `json:"cardnumber" binding:"required"`
