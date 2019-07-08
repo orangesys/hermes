@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
-	"os"
 
 	"github.com/orangesys/hermes/routers"
 )
@@ -17,10 +17,34 @@ func main() {
 		Addr:    fmt.Sprintf(":%d", 8080),
 		Handler: router,
 	}
-	if err := s.ListenAndServe(); err != nil {
-		fmt.Printf("can not run hermes server: %v\n", err)
-		os.Exit(33)
+	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("listen: %s\n", err)
 	}
+	// go func() {
+	// 	// service Conections
+	// 	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	// 		log.Fatalf("listen: %s\n", err)
+	// 	}
+	// }()
+
+	// quit := make(chan os.Signal)
+	// // kill (no param) default send syscall.SIGTERM
+	// // kill -2 is syscall.SIGINT
+	// // kill -9 is syscall.SIGKILL but can't be catch, so don't need add it
+	// signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	// <-quit
+	// log.Println("ShutDown Server ...")
+
+	// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// defer cancel()
+	// if err := s.Shutdown(ctx); err != nil {
+	// 	log.Fatal("Server Shutdown:", err)
+	// }
+	// select {
+	// case <-ctx.Done():
+	// 	log.Println("timeout of 5 seconds.")
+	// }
+	// log.Println("Server exiting")
 
 	// currentTime := time.Now()
 	// fmt.Println(currentTime)

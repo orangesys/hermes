@@ -9,6 +9,7 @@ func InitRouter() *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
+	r.HEAD("/ping", v1.Ping)
 
 	apiv1 := r.Group("/api/v1")
 	{
