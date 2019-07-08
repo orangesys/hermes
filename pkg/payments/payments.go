@@ -14,22 +14,33 @@ import (
 	"github.com/stripe/stripe-go/token"
 )
 
-// CreateCustomer with email , unique email
-func CreateCustomer(email string) (cust *stripe.Customer, err error) {
+// deleteCustomer if card is invalid
+func deleteCustomer(stripeCustomerID string) error {
 	stripe.Key = "sk_test_ljCYC27PV9LBxE1XYAA813jq"
-	fmt.Println(stripe.Key)
+	params := &stripe.CustomerParams{}
+	_, err := customer.Del(stripeCustomerID, params)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateCustomer with email , unique email
+func CreateCustomer(companyname, email string) (cust *stripe.Customer, err error) {
+	stripe.Key = "sk_test_ljCYC27PV9LBxE1XYAA813jq"
 
 	if err := customerIsExist(email); err != nil {
 		return nil, err
 	}
 	newCustomerParams := &stripe.CustomerParams{
+		Name:  stripe.String(companyname),
 		Email: stripe.String(email),
 	}
 
 	if cust, err = customer.New(newCustomerParams); err != nil {
 		return nil, err
 	}
-	return cust, err
+	return cust, nil
 }
 
 // customerIsExist
@@ -60,6 +71,9 @@ func AddSource(cardNumber, expMonth, expYear, cvc, stripeCustomerID string) (*st
 	}
 	t, err := token.New(tokenParams)
 	if err != nil {
+		if err := deleteCustomer(stripeCustomerID); err != nil {
+			return nil, fmt.Errorf("can not delete invalid card user, please check stripe")
+		}
 		return nil, err
 	}
 
