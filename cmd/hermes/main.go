@@ -5,19 +5,58 @@ import (
 	"log"
 	"net/http"
 
+	// "github.com/prometheus/common/version"
+	"gopkg.in/alecthomas/kingpin.v2"
+
 	"github.com/orangesys/hermes/routers"
 )
 
-func main() {
-	router := routers.InitRouter()
+var (
+	// app    = kingpin.New("hermes", "hermes command for orangesys")
+	server = kingpin.Command("server", "hermes server for orangesys")
 
-	s := &http.Server{
-		Addr:    fmt.Sprintf(":%d", 8080),
-		Handler: router,
+	batch = kingpin.Command("batch", "batch is create usage record to stripe")
+)
+
+func main() {
+	switch kingpin.Parse() {
+	case server.FullCommand():
+		router := routers.InitRouter()
+
+		s := &http.Server{
+			Addr:    fmt.Sprintf(":%d", 8080),
+			Handler: router,
+		}
+		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+		go func() {
+			// service Conections
+			if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Fatalf("listen: %s\n", err)
+			}
+		}()
+	case batch.FullCommand():
+		fmt.Println("this is batch")
 	}
-	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("listen: %s\n", err)
-	}
+	// app := kingpin.New(filepath.Base(os.Args[0]), "Hermes for Orangesys")
+	// app.Version(version.Print("hermes"))
+
+	// registerServer(app, "server")
+	// if _, err := app.Parse(os.Args[1:]); err != nil {
+	// 	fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error parsing commandline arguments"))
+	// 	app.Usage(os.Args[1:])
+	// 	os.Exit(2)
+	// }
+	// router := routers.InitRouter()
+
+	// s := &http.Server{
+	// 	Addr:    fmt.Sprintf(":%d", 8080),
+	// 	Handler: router,
+	// }
+	// if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	// 	log.Fatalf("listen: %s\n", err)
+	// }
 	// go func() {
 	// 	// service Conections
 	// 	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
