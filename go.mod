@@ -14,7 +14,7 @@ require (
 	github.com/mattn/go-isatty v0.0.8 // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/stripe/stripe-go v61.13.0+incompatible
-	github.com/ugorji/go/codec v1.1.7 // indirect
+	github.com/ugorji/go v1.1.7 // indirect
 	golang.org/x/net v0.0.0-20190628185345-da137c7871d7
 	golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb // indirect
 	google.golang.org/api v0.7.0
