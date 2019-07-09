@@ -56,6 +56,7 @@ func CreateUser(c *gin.Context) {
 	}
 
 	paymentData := map[string]interface{}{
+		"state": "true",
 		"payments": map[string]interface{}{
 			"customerID":     cus.ID,
 			"subscriptionID": subItemID,
