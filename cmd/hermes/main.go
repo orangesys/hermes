@@ -3,92 +3,21 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
+	"net/http"
 
-	"golang.org/x/net/context"
-
-	firebase "firebase.google.com/go"
-	"google.golang.org/api/iterator"
-
-	"google.golang.org/api/option"
+	"github.com/orangesys/hermes/routers"
 )
 
-// func mergeMaps(maps map[string]interface{}) map[string]interface{} {
-// 	result := make(map[string]interface{})
-// 	for _, m := range maps {
-// 		for k, v := range m {
-// 			result[k] = v
-// 		}
-// 	}
-// 	return result
-// }
 func main() {
-	jsonPath := os.Getenv("FIREBASE_JSON_PATH")
-	// userID := "YZ3KuBygNIOhVvSjvxjl"
+	router := routers.InitRouter()
 
-	opt := option.WithCredentialsFile(jsonPath)
-	ctx := context.Background()
-	app, err := firebase.NewApp(context.Background(), nil, opt)
-	if err != nil {
-		// return err
-		log.Fatalln(err)
+	s := &http.Server{
+		Addr:    fmt.Sprintf(":%d", 8080),
+		Handler: router,
 	}
-
-	client, err := app.Firestore(ctx)
-	if err != nil {
-		// return err
-		log.Fatalln(err)
+	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("listen: %s\n", err)
 	}
-	defer client.Close()
-
-	iter := client.Collection("users").Documents(ctx)
-	// batchlist := make([]interface{}, 0)
-	var batchlist []interface{}
-	for {
-		doc, err := iter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			log.Fatal(err)
-		}
-		d := doc.Data()["payments"]
-		if d != nil {
-			batchlist = append(batchlist, d)
-		}
-		// fmt.Println(data["payments"])
-		// fmt.Printf("%d => %v\n", i, d.0)
-
-	}
-	for _, data := range batchlist {
-		for k, v := range data.(map[string]interface{}) {
-			fmt.Println(k, v)
-		}
-	}
-	// fmt.Println(doc.Data())
-	// field, err := client.Collection("users").Doc(userID).Get(ctx)
-	// if err != nil {
-	// 	// return err
-	// 	log.Fatalf("Failed adding aturing: %v", err)
-	// }
-	// data := field.Data()
-	// for k, v := range data {
-	// 	fmt.Printf("key: %v, value: %v\n", k, v)
-	// }
-	// reference
-	// iter := client.Collection("users").Documents(ctx)
-	// for {
-	// 	_, err := iter.Next()
-	// 	if err == iterator.Done {
-	// 		// return nil
-	// 		break
-	// 	}
-	// 	if err != nil {
-	// 		// return err
-	// 		log.Fatalf("Failed to iterate: %v", err)
-	// 	}
-	// 	// fmt.Println(doc.Data())
-	// }
 	// go func() {
 	// 	// service Conections
 	// 	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
