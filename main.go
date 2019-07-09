@@ -11,17 +11,11 @@ import (
 	"google.golang.org/api/iterator"
 
 	"google.golang.org/api/option"
+
+	"github.com/orangesys/hermes/pkg/billing"
+	"github.com/orangesys/hermes/pkg/payments"
 )
 
-// func mergeMaps(maps map[string]interface{}) map[string]interface{} {
-// 	result := make(map[string]interface{})
-// 	for _, m := range maps {
-// 		for k, v := range m {
-// 			result[k] = v
-// 		}
-// 	}
-// 	return result
-// }
 func main() {
 	jsonPath := os.Getenv("FIREBASE_JSON_PATH")
 	// userID := "YZ3KuBygNIOhVvSjvxjl"
@@ -41,7 +35,25 @@ func main() {
 	}
 	defer client.Close()
 
-	iter := client.Collection("users").Documents(ctx)
+	// snapIter := client.Collection("users").Where("state", "==", true).Snapshots(ctx)
+	// defer snapIter.Stop()
+	// for {
+	// 	snap, err := snapIter.Next()
+	// 	if err != nil {
+	// 		log.Fatalln(err)
+	// 	}
+	// 	docs, err := snap.Documents.GetAll()
+	// 	fmt.Printf("data size: %d\n", snap.Size)
+	// 	for i, data := range docs {
+	// 		fmt.Printf("data %d, content: %+v\n", i, data.Data())
+	// 	}
+	// 	fmt.Println()
+	// }
+	server := "http://127.0.0.1:9090"
+	sumNodes := billing.CountNodesFromQuerier(server)
+	fmt.Println(sumNodes)
+
+	iter := client.Collection("users").Where("state", "==", true).Documents(ctx)
 	// batchlist := make([]interface{}, 0)
 	var batchlist []interface{}
 	for {
@@ -53,28 +65,36 @@ func main() {
 			log.Fatal(err)
 		}
 		d := doc.Data()["payments"]
+
 		if d != nil {
+			// fmt.Println(doc.Ref.ID)
+			// fmt.Println(doc.Data())
 			batchlist = append(batchlist, d)
 		}
-		// fmt.Println(data["payments"])
-		// fmt.Printf("%d => %v\n", i, d.0)
-
 	}
 	for _, data := range batchlist {
-		for k, v := range data.(map[string]interface{}) {
-			fmt.Println(k, v)
+		d := data.(map[string]interface{})
+		fmt.Println(d["customerID"], d["subscriptionID"])
+		q := int64(sumNodes)
+		customerid := d["customerID"].(string)
+		subscriptionid := d["subscriptionID"].(string)
+
+		if err := payments.AddUsageRecord(subscriptionid, customerid, q); err != nil {
+			fmt.Printf("cat not create %d usage record with %s", q, customerid)
+		} else {
+			fmt.Printf("create %d unit with %s", q, customerid)
 		}
+		// for k := range d {
+		// 	fmt.Println(k, d[k])
+		// 	fmt.Println("---")
+		// }
 	}
-	// fmt.Println(doc.Data())
-	// field, err := client.Collection("users").Doc(userID).Get(ctx)
-	// if err != nil {
-	// 	// return err
-	// 	log.Fatalf("Failed adding aturing: %v", err)
+	// for _, data := range batchlist {
+	// 	for k, v := range data.(map[string]interface{}) {
+	// 		fmt.Println(k, v)
+	// 	}
 	// }
-	// data := field.Data()
-	// for k, v := range data {
-	// 	fmt.Printf("key: %v, value: %v\n", k, v)
-	// }
+
 	// reference
 	// iter := client.Collection("users").Documents(ctx)
 	// for {
@@ -114,79 +134,6 @@ func main() {
 	// 	log.Println("timeout of 5 seconds.")
 	// }
 	// log.Println("Server exiting")
-
-	// currentTime := time.Now()
-	// fmt.Println(currentTime)
-	// start, end := oneDaysAgoTimestamp(currentTime)
-
-	// // count prometheus server with usage record
-	// // count(kube_pod_start_time{pod=~"prometheus-k8s.*"})
-
-	// query := "count(node_boot_time_seconds)"
-	// server := "http://127.0.0.1:9090"
-
-	// client, err := promql.NewClient(server)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-
-	// resp, err := client.QueryRange(query, start, end)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// type valueEntry struct {
-	// 	Metric map[string]string `json:"metric"`
-	// 	Value  float64           `json:"value`
-	// }
-
-	// type timeEntry struct {
-	// 	Time   int64         `jsno:"time"`
-	// 	Values []*valueEntry `json:"values"`
-	// }
-
-	// entryByTime := map[int64]*timeEntry{}
-	// var nodes float64
-	// // Save count node number to firestore
-	// // Show billing with app.orangesys.io dashboard
-	// for _, r := range resp.Data.Result {
-	// 	for _, v := range r.Values {
-	// 		t := v.Time()
-	// 		u := t.Unix()
-	// 		e, ok := entryByTime[u]
-
-	// 		if !ok {
-	// 			e = &timeEntry{
-	// 				Time:   u,
-	// 				Values: []*valueEntry{},
-	// 			}
-	// 			entryByTime[u] = e
-	// 		}
-	// 		val, err := v.Value()
-	// 		nodes = nodes + val
-	// 		if err != nil {
-	// 			fmt.Println(err)
-	// 		}
-	// 		e.Values = append(e.Values, &valueEntry{
-	// 			Metric: r.Metric,
-	// 			Value:  val,
-	// 		})
-	// 	}
-	// }
-	// fmt.Printf("count node by 24H is %v\n", nodes)
-
-	// s := make([]*timeEntry, len(entryByTime))
-	// i := 0
-	// for _, e := range entryByTime {
-	// 	s[i] = e
-	// 	i++
-	// }
-
-	// b, err := json.Marshal(s)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println(string(b))
-	// fmt.Println(res.Body)
 
 	//AddUsageRecord
 	// var q int64 = 100
