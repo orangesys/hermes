@@ -10,7 +10,7 @@ import (
 	"github.com/orangesys/hermes/routers"
 )
 
-func registerServer() {
+func registerServe() {
 	router := routers.InitRouter()
 
 	s := &http.Server{

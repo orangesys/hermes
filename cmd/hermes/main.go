@@ -7,15 +7,15 @@ import (
 
 var (
 	// app    = kingpin.New("hermes", "hermes command for orangesys")
-	server = kingpin.Command("server", "hermes server for orangesys")
+	serve = kingpin.Command("serve", "hermes serve for orangesys")
 
 	batch = kingpin.Command("batch", "batch is create usage record to stripe")
 )
 
 func main() {
 	switch kingpin.Parse() {
-	case server.FullCommand():
-		registerServer()
+	case serve.FullCommand():
+		registerServe()
 	case batch.FullCommand():
 		registerBatch()
 	}
