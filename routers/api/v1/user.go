@@ -1,10 +1,13 @@
 package v1
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/orangesys/hermes/pkg/db"
 	"github.com/orangesys/hermes/pkg/payments"
 )
@@ -12,7 +15,6 @@ import (
 // User is firebase database
 type User struct {
 	Email       string `json:"email" binding:"required,email"`
-	UserID      string `json:"userid" binding:"required"`
 	PlanID      string `json:"planid" binding:"required"`
 	CompanyName string `json:"companyname" binding:"required"`
 	CardNumber  string `json:"cardnumber" binding:"required"`
@@ -35,7 +37,7 @@ func CreateUser(c *gin.Context) {
 		})
 		return
 	}
-	fmt.Println(cus.ID)
+	// fmt.Println(cus.ID)
 	// add card source to customer
 	// cardNumber, expMonth, expYear, cvc, stripeCustomerID string
 	if _, err := payments.AddSource(u.CardNumber, u.ExpMonth, u.ExpYear, u.CVC, cus.ID); err != nil {
@@ -47,7 +49,6 @@ func CreateUser(c *gin.Context) {
 
 	//add subscription to customer with planID
 	subItemID, err := payments.Addsubscription(u.PlanID, cus.ID)
-	fmt.Println(subItemID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"messages": err.Error(),
@@ -55,20 +56,45 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 	var state bool = true
-	paymentData := map[string]interface{}{
-		"state": state,
-		"payments": map[string]interface{}{
-			"customerID":     cus.ID,
-			"subscriptionID": subItemID,
-		},
+	payments := &db.Payments{
+		PlanID:         u.PlanID,
+		CustomerID:     cus.ID,
+		SubscriptionID: subItemID,
+		StartDate:      time.Now(),
+		State:          state,
 	}
 
-	if err := db.UpdateDB(u.UserID, paymentData); err != nil {
+	userdata := map[string]interface{}{
+		"state": state,
+	}
+	firebaseApp, err := db.InitApp()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"messages": err.Error(),
+		})
+		return
+	}
+	firestoreClient, err := db.InitFirestoreClient(firebaseApp)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"messages": err.Error(),
+		})
+		return
+	}
+	ctx := context.Background()
+	if err := db.UpdateUserState(ctx, firestoreClient, u.Email, userdata); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"messages": err.Error(),
 		})
 		return
 	} else {
-		c.JSON(http.StatusOK, gin.H{"status": "signup successed"})
+		if err := db.AddPaymentsCollection(ctx, firestoreClient, u.Email, payments); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"messages": err.Error(),
+			})
+			return
+		} else {
+			c.JSON(http.StatusOK, gin.H{"status": "signup successed"})
+		}
 	}
 }

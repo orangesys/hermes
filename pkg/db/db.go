@@ -1,55 +1,98 @@
 package db
 
 import (
-	"os"
+	"time"
 
 	"golang.org/x/net/context"
 
 	"cloud.google.com/go/firestore"
-
 	firebase "firebase.google.com/go"
 
 	"google.golang.org/api/iterator"
-	"google.golang.org/api/option"
 )
 
-func UpdateDB(userID string, data map[string]interface{}) error {
+type Database struct {
+	client *firestore.Client
+	ctx    context.Context
+}
+type PaymentsHistory struct {
+	Date int64 `firestore:"date,omitempty"`
+}
 
-	jsonPath := os.Getenv("FIREBASE_JSON_PATH")
+type Payments struct {
+	PlanID         string    `firestore:"planID,omitempty"`
+	CustomerID     string    `firestore:"customerID,omitempty"`
+	SubscriptionID string    `firestore:"subscriptionID,omitempty"`
+	StartDate      time.Time `firestore:"startDate,omitempty"`
+	State          bool      `firestore:"state,omitempty"`
+}
 
-	opt := option.WithCredentialsFile(jsonPath)
-	ctx := context.Background()
-	app, err := firebase.NewApp(context.Background(), nil, opt)
+type UserData struct {
+	CompanyName      string `firestore:"companyName,omitempty"`
+	Email            string `firestore:"email,omitempty"`
+	PrometheusLables string `firestore:"prometheusLables,omitempty"`
+	SubDomain        string `firestore:"subDomain,omitempty"`
+	TelegrafToken    string `firestore:"telegrafToken,omitempty"`
+	State            bool   `firestore:"state,omitempty"`
+}
+
+var defaultCollection = "users"
+var defaultSubCollection = "payments"
+
+func getUserRefIdWithEmail(ctx context.Context, client *firestore.Client, email string) (string, error) {
+	// defer client.Close()
+	iter := client.Collection(defaultCollection).Where("email", "==", email).Documents(ctx)
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			return "", err
+		}
+		if err != nil {
+			return "", err
+		}
+		return doc.Ref.ID, nil
+	}
+}
+
+func AddPaymentsCollection(ctx context.Context, client *firestore.Client, email string, payments *Payments) error {
+	// defer client.Close()
+	userID, err := getUserRefIdWithEmail(ctx, client, email)
 	if err != nil {
 		return err
-		// log.Fatalln(err)
 	}
-
-	client, err := app.Firestore(ctx)
+	_, _, err = client.Collection(defaultCollection).Doc(userID).Collection(defaultSubCollection).Add(ctx, payments)
 	if err != nil {
 		return err
-		// log.Fatalln(err)
 	}
-	defer client.Close()
+	return nil
+}
 
+func UpdateUserState(ctx context.Context, client *firestore.Client, email string, data map[string]interface{}) error {
+	userID, err := getUserRefIdWithEmail(ctx, client, email)
+	if err != nil {
+		return err
+	}
 	_, err = client.Collection("users").Doc(userID).Set(ctx, data, firestore.MergeAll)
 	if err != nil {
 		return err
-		// log.Fatalf("Failed adding aturing: %v", err)
 	}
+	return nil
+}
 
-	// reference
-	iter := client.Collection("users").Documents(ctx)
-	for {
-		_, err := iter.Next()
-		if err == iterator.Done {
-			return nil
-			// break
-		}
-		if err != nil {
-			return err
-			// log.Fatalf("Failed to iterate: %v", err)
-		}
-		// fmt.Println(doc.Data())
+func InitApp() (*firebase.App, error) {
+	// Get a Firebase app
+	app, err := firebase.NewApp(context.Background(), nil)
+	if err != nil {
+		return nil, err
 	}
+	return app, nil
+}
+
+func InitFirestoreClient(app *firebase.App) (*firestore.Client, error) {
+	// Get a Firestore client.
+	c, err := app.Firestore(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
 }
