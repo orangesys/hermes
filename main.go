@@ -8,8 +8,6 @@ import (
 
 	firebase "firebase.google.com/go"
 	"google.golang.org/api/iterator"
-
-	"github.com/orangesys/hermes/pkg/payments"
 )
 
 func main() {
@@ -44,11 +42,12 @@ func main() {
 	// server := "http://127.0.0.1:9090"
 	// sumNodes := billing.CountNodesFromQuerier(server)
 	// fmt.Println(sumNodes)
-	var sumNodes int64 = 146
-	email := "hogehoge3@example.com"
-	iter := client.Collection("users").Where("email", "==", email).Documents(ctx)
+	// var sumNodes int64 = 146
+	// email := "hogehoge3@example.com"
+	customerID := "cus_FPmKc8HFnpQM5j"
+	iter := client.Collection("users").Doc("6Qn2ZFo4jnyY8l2JK5rC").Collection("payments").Where("customerID", "==", customerID).Documents(ctx)
 	// batchlist := make([]interface{}, 0)
-	var batchlist []interface{}
+	// var batchlist []interface{}
 	for {
 		doc, err := iter.Next()
 		if err == iterator.Done {
@@ -57,31 +56,32 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		d := doc.Data()["payments"]
-		fmt.Println(doc.Ref.ID)
-		if d != nil {
-			// fmt.Println(doc.Ref.ID)
-			// fmt.Println(doc.Data())
-			batchlist = append(batchlist, d)
-		}
-	}
-	for _, data := range batchlist {
-		d := data.(map[string]interface{})
-		fmt.Println(d["customerID"], d["subscriptionID"])
-		q := int64(sumNodes)
-		customerid := d["customerID"].(string)
-		subscriptionid := d["subscriptionID"].(string)
-
-		if err := payments.AddUsageRecord(subscriptionid, customerid, q); err != nil {
-			fmt.Printf("cat not create %d usage record with %s", q, customerid)
-		} else {
-			fmt.Printf("create %d unit with %s", q, customerid)
-		}
-		// for k := range d {
-		// 	fmt.Println(k, d[k])
-		// 	fmt.Println("---")
+		fmt.Println(doc.Data())
+		// d := doc.Data()["payments"]
+		// fmt.Println(doc.Ref.ID)
+		// if d != nil {
+		// 	// fmt.Println(doc.Ref.ID)
+		// 	// fmt.Println(doc.Data())
+		// 	batchlist = append(batchlist, d)
 		// }
 	}
+	// for _, data := range batchlist {
+	// 	d := data.(map[string]interface{})
+	// 	fmt.Println(d["customerID"], d["subscriptionID"])
+	// 	q := int64(sumNodes)
+	// 	customerid := d["customerID"].(string)
+	// 	subscriptionid := d["subscriptionID"].(string)
+
+	// 	if err := payments.AddUsageRecord(subscriptionid, customerid, q); err != nil {
+	// 		fmt.Printf("cat not create %d usage record with %s", q, customerid)
+	// 	} else {
+	// 		fmt.Printf("create %d unit with %s", q, customerid)
+	// 	}
+	// 	// for k := range d {
+	// 	// 	fmt.Println(k, d[k])
+	// 	// 	fmt.Println("---")
+	// 	// }
+	// }
 	// for _, data := range batchlist {
 	// 	for k, v := range data.(map[string]interface{}) {
 	// 		fmt.Println(k, v)

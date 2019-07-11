@@ -39,18 +39,43 @@ type UserData struct {
 var defaultCollection = "users"
 var defaultSubCollection = "payments"
 
-func getUserRefIdWithEmail(ctx context.Context, client *firestore.Client, email string) (string, error) {
-	// defer client.Close()
-	iter := client.Collection(defaultCollection).Where("email", "==", email).Documents(ctx)
+func AddPaymentHistory(ctx context.Context, client *firestore.Client) error {
+	userID, err := getUserRefIdWithEmail(ctx, client, email)
+	if err != nil {
+		return err
+	}
+	_, _, err = client.Collection(defaultCollection).Doc(userID).Collection(defaultSubCollection).Add(ctx, payments)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetBatchPaymentsList(ctx context.Context, client *firestore.Client) ([]map[string]interface{}, error) {
+	iter := client.Collection(defaultCollection).Where("state", "==", true).Documents(ctx)
+	// var batchlist []Payments
+	batchlist := []map[string]interface{}{}
 	for {
 		doc, err := iter.Next()
 		if err == iterator.Done {
-			return "", err
+			return batchlist, nil
 		}
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		return doc.Ref.ID, nil
+
+		payiter := client.Collection(defaultCollection).Doc(doc.Ref.ID).Collection(defaultSubCollection).Where("state", "==", true).Documents(ctx)
+		for {
+			doc, err := payiter.Next()
+			if err == iterator.Done {
+				return batchlist, nil
+			}
+			if err != nil {
+				return nil, err
+			}
+			// fmt.Println(doc.Data())
+			batchlist = append(batchlist, doc.Data())
+		}
 	}
 }
 
@@ -77,6 +102,21 @@ func UpdateUserState(ctx context.Context, client *firestore.Client, email string
 		return err
 	}
 	return nil
+}
+
+func getUserRefIdWithEmail(ctx context.Context, client *firestore.Client, email string) (string, error) {
+	// defer client.Close()
+	iter := client.Collection(defaultCollection).Where("email", "==", email).Documents(ctx)
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			return "", err
+		}
+		if err != nil {
+			return "", err
+		}
+		return doc.Ref.ID, nil
+	}
 }
 
 func InitApp() (*firebase.App, error) {
