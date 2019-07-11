@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"time"
 
 	"golang.org/x/net/context"
@@ -39,22 +40,11 @@ type UserData struct {
 var defaultCollection = "users"
 var defaultSubCollection = "payments"
 
-func AddPaymentHistory(ctx context.Context, client *firestore.Client) error {
-	userID, err := getUserRefIdWithEmail(ctx, client, email)
-	if err != nil {
-		return err
-	}
-	_, _, err = client.Collection(defaultCollection).Doc(userID).Collection(defaultSubCollection).Add(ctx, payments)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func GetBatchPaymentsList(ctx context.Context, client *firestore.Client) ([]map[string]interface{}, error) {
+func GetBatchPaymentsList(ctx context.Context, client *firestore.Client) (map[string]interface{}, error) {
 	iter := client.Collection(defaultCollection).Where("state", "==", true).Documents(ctx)
 	// var batchlist []Payments
-	batchlist := []map[string]interface{}{}
+	// batchlist := []map[string]interface{}{}
+	batchlist := make(map[string]interface{})
 	for {
 		doc, err := iter.Next()
 		if err == iterator.Done {
@@ -63,18 +53,19 @@ func GetBatchPaymentsList(ctx context.Context, client *firestore.Client) ([]map[
 		if err != nil {
 			return nil, err
 		}
-
-		payiter := client.Collection(defaultCollection).Doc(doc.Ref.ID).Collection(defaultSubCollection).Where("state", "==", true).Documents(ctx)
+		colPath := fmt.Sprintf("%s/%s/%s", defaultCollection, doc.Ref.ID, defaultSubCollection)
+		payiter := client.Collection(colPath).Where("state", "==", true).Documents(ctx)
+		// payiter := client.Collection(defaultCollection).Doc(doc.Ref.ID).Collection(defaultSubCollection).Where("state", "==", true).Documents(ctx)
 		for {
-			doc, err := payiter.Next()
+			paydoc, err := payiter.Next()
 			if err == iterator.Done {
 				return batchlist, nil
 			}
 			if err != nil {
 				return nil, err
 			}
-			// fmt.Println(doc.Data())
-			batchlist = append(batchlist, doc.Data())
+			paycolPath := fmt.Sprintf("%s/%s", colPath, paydoc.Ref.ID)
+			batchlist[paycolPath] = paydoc.Data()
 		}
 	}
 }
