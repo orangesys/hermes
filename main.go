@@ -3,26 +3,18 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 
 	"golang.org/x/net/context"
 
 	firebase "firebase.google.com/go"
 	"google.golang.org/api/iterator"
 
-	"google.golang.org/api/option"
-
-	"github.com/orangesys/hermes/pkg/billing"
 	"github.com/orangesys/hermes/pkg/payments"
 )
 
 func main() {
-	jsonPath := os.Getenv("FIREBASE_JSON_PATH")
-	// userID := "YZ3KuBygNIOhVvSjvxjl"
-
-	opt := option.WithCredentialsFile(jsonPath)
 	ctx := context.Background()
-	app, err := firebase.NewApp(context.Background(), nil, opt)
+	app, err := firebase.NewApp(context.Background(), nil)
 	if err != nil {
 		// return err
 		log.Fatalln(err)
@@ -49,11 +41,12 @@ func main() {
 	// 	}
 	// 	fmt.Println()
 	// }
-	server := "http://127.0.0.1:9090"
-	sumNodes := billing.CountNodesFromQuerier(server)
-	fmt.Println(sumNodes)
-
-	iter := client.Collection("users").Where("state", "==", true).Documents(ctx)
+	// server := "http://127.0.0.1:9090"
+	// sumNodes := billing.CountNodesFromQuerier(server)
+	// fmt.Println(sumNodes)
+	var sumNodes int64 = 146
+	email := "hogehoge3@example.com"
+	iter := client.Collection("users").Where("email", "==", email).Documents(ctx)
 	// batchlist := make([]interface{}, 0)
 	var batchlist []interface{}
 	for {
@@ -65,7 +58,7 @@ func main() {
 			log.Fatal(err)
 		}
 		d := doc.Data()["payments"]
-
+		fmt.Println(doc.Ref.ID)
 		if d != nil {
 			// fmt.Println(doc.Ref.ID)
 			// fmt.Println(doc.Data())
