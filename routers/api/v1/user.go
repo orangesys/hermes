@@ -69,10 +69,8 @@ func CreateUser(c *gin.Context) {
 		PlanID:         u.PlanID,
 		CustomerID:     initUser["cusID"],
 		SubscriptionID: initUser["subItemID"],
-		// CustomerID:     cus.ID,
-		// SubscriptionID: subItemID,
-		StartDate: time.Now(),
-		State:     state,
+		StartDate:      time.Now(),
+		State:          state,
 	}
 
 	userdata := map[string]interface{}{
