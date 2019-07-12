@@ -15,6 +15,16 @@ import (
 	"github.com/stripe/stripe-go/token"
 )
 
+type User struct {
+	Email       string `json:"email" binding:"required,email"`
+	PlanID      string `json:"planid" binding:"required"`
+	CompanyName string `json:"companyname" binding:"required"`
+	CardNumber  string `json:"cardnumber" binding:"required"`
+	ExpMonth    string `json:"expmonth" binding:"required"`
+	ExpYear     string `json:"expyear" binding:"required"`
+	CVC         string `json:"cvc" binding:"required"`
+}
+
 // deleteCustomer if card is invalid
 func deleteCustomer(stripeCustomerID string) error {
 	stripe.Key = os.Getenv("SECRET_KEY")
@@ -24,6 +34,26 @@ func deleteCustomer(stripeCustomerID string) error {
 		return err
 	}
 	return nil
+}
+
+// InitPayUser is create new user and add source
+func InitPayUser(u *User) (user map[string]string, err error) {
+	cus, err := CreateCustomer(u.CompanyName, u.Email)
+	if err != nil {
+		return user, err
+	}
+	if _, err := AddSource(u.CardNumber, u.ExpMonth, u.ExpYear, u.CVC, cus.ID); err != nil {
+		return user, err
+	}
+	subItemID, err := Addsubscription(u.PlanID, cus.ID)
+	if err != nil {
+		return user, err
+	}
+	user = map[string]string{
+		"cusID":     cus.ID,
+		"subItemID": subItemID,
+	}
+	return user, nil
 }
 
 // CreateCustomer with email , unique email

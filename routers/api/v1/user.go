@@ -13,23 +13,22 @@ import (
 )
 
 // User is firebase database
-type User struct {
-	Email       string `json:"email" binding:"required,email"`
-	PlanID      string `json:"planid" binding:"required"`
-	CompanyName string `json:"companyname" binding:"required"`
-	CardNumber  string `json:"cardnumber" binding:"required"`
-	ExpMonth    string `json:"expmonth" binding:"required"`
-	ExpYear     string `json:"expyear" binding:"required"`
-	CVC         string `json:"cvc" binding:"required"`
-}
+// type User struct {
+// 	Email       string `json:"email" binding:"required,email"`
+// 	PlanID      string `json:"planid" binding:"required"`
+// 	CompanyName string `json:"companyname" binding:"required"`
+// 	CardNumber  string `json:"cardnumber" binding:"required"`
+// 	ExpMonth    string `json:"expmonth" binding:"required"`
+// 	ExpYear     string `json:"expyear" binding:"required"`
+// 	CVC         string `json:"cvc" binding:"required"`
+// }
 
 func CreateUser(c *gin.Context) {
-	var u User
+	var u payments.User
 	if err := c.ShouldBindJSON(&u); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
-	// create customer with email, email is unique
-	cus, err := payments.CreateCustomer(u.CompanyName, u.Email)
+	initUser, err := payments.InitPayUser(&u)
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -37,31 +36,43 @@ func CreateUser(c *gin.Context) {
 		})
 		return
 	}
+	// fmt.Println(initUser)
+	// create customer with email, email is unique
+	// cus, err := payments.CreateCustomer(u.CompanyName, u.Email)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	c.JSON(http.StatusInternalServerError, gin.H{
+	// 		"messages": err.Error(),
+	// 	})
+	// 	return
+	// }
 	// fmt.Println(cus.ID)
 	// add card source to customer
 	// cardNumber, expMonth, expYear, cvc, stripeCustomerID string
-	if _, err := payments.AddSource(u.CardNumber, u.ExpMonth, u.ExpYear, u.CVC, cus.ID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"messages": err.Error(),
-		})
-		return
-	}
+	// if _, err := payments.AddSource(u.CardNumber, u.ExpMonth, u.ExpYear, u.CVC, cus.ID); err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{
+	// 		"messages": err.Error(),
+	// 	})
+	// 	return
+	// }
 
 	//add subscription to customer with planID
-	subItemID, err := payments.Addsubscription(u.PlanID, cus.ID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"messages": err.Error(),
-		})
-		return
-	}
+	// subItemID, err := payments.Addsubscription(u.PlanID, cus.ID)
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{
+	// 		"messages": err.Error(),
+	// 	})
+	// 	return
+	// }
 	var state bool = true
 	payments := &db.Payments{
 		PlanID:         u.PlanID,
-		CustomerID:     cus.ID,
-		SubscriptionID: subItemID,
-		StartDate:      time.Now(),
-		State:          state,
+		CustomerID:     initUser["cusID"],
+		SubscriptionID: initUser["subItemID"],
+		// CustomerID:     cus.ID,
+		// SubscriptionID: subItemID,
+		StartDate: time.Now(),
+		State:     state,
 	}
 
 	userdata := map[string]interface{}{
