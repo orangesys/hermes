@@ -2,6 +2,7 @@ package payments
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/stripe/stripe-go"
@@ -16,7 +17,7 @@ import (
 
 // deleteCustomer if card is invalid
 func deleteCustomer(stripeCustomerID string) error {
-	stripe.Key = "sk_test_ljCYC27PV9LBxE1XYAA813jq"
+	stripe.Key = os.Getenv("SECRET_KEY")
 	params := &stripe.CustomerParams{}
 	_, err := customer.Del(stripeCustomerID, params)
 	if err != nil {
@@ -27,7 +28,7 @@ func deleteCustomer(stripeCustomerID string) error {
 
 // CreateCustomer with email , unique email
 func CreateCustomer(companyname, email string) (cust *stripe.Customer, err error) {
-	stripe.Key = "sk_test_ljCYC27PV9LBxE1XYAA813jq"
+	stripe.Key = os.Getenv("SECRET_KEY")
 
 	if err := customerIsExist(email); err != nil {
 		return nil, err
@@ -45,7 +46,7 @@ func CreateCustomer(companyname, email string) (cust *stripe.Customer, err error
 
 // customerIsExist
 func customerIsExist(email string) error {
-	stripe.Key = "sk_test_ljCYC27PV9LBxE1XYAA813jq"
+	stripe.Key = os.Getenv("SECRET_KEY")
 
 	params := &stripe.CustomerListParams{}
 	params.Filters.AddFilter("email", "", email)
@@ -59,7 +60,7 @@ func customerIsExist(email string) error {
 
 //AddSource is add card to customer
 func AddSource(cardNumber, expMonth, expYear, cvc, stripeCustomerID string) (*stripe.PaymentSource, error) {
-	stripe.Key = "sk_test_ljCYC27PV9LBxE1XYAA813jq"
+	stripe.Key = os.Getenv("SECRET_KEY")
 
 	tokenParams := &stripe.TokenParams{
 		Card: &stripe.CardParams{
@@ -89,7 +90,7 @@ func AddSource(cardNumber, expMonth, expYear, cvc, stripeCustomerID string) (*st
 
 //Addsubscription add subscription with customer by monthly
 func Addsubscription(planID, stripeCustomerID string) (string, error) {
-	stripe.Key = "sk_test_ljCYC27PV9LBxE1XYAA813jq"
+	stripe.Key = os.Getenv("SECRET_KEY")
 	subParams := &stripe.SubscriptionParams{
 		Customer: stripe.String(stripeCustomerID),
 		Items: []*stripe.SubscriptionItemsParams{
@@ -109,7 +110,7 @@ func Addsubscription(planID, stripeCustomerID string) (string, error) {
 // PromQL:	count(node_boot_time_seconds)
 // 			count(node_boot_time_seconds)[24h:1h]
 func AddUsageRecord(subItemID, stripeCustomerID string, quantity int64) error {
-	stripe.Key = "sk_test_ljCYC27PV9LBxE1XYAA813jq"
+	stripe.Key = os.Getenv("SECRET_KEY")
 	params := &stripe.UsageRecordParams{
 		Quantity:         stripe.Int64(quantity),
 		SubscriptionItem: stripe.String(subItemID),

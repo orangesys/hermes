@@ -1,1 +1,2 @@
-dev-app-orangesys-firebase-*.json
+.env
+firebase-iam.json
