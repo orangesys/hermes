@@ -1,13 +1,16 @@
 package main
 
 import (
+	// "fmt"
 	"fmt"
 	"log"
+	"strings"
 
 	"golang.org/x/net/context"
 
+	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
-	"google.golang.org/api/iterator"
+	// "google.golang.org/api/iterator"
 )
 
 func main() {
@@ -44,27 +47,41 @@ func main() {
 	// fmt.Println(sumNodes)
 	// var sumNodes int64 = 146
 	// email := "hogehoge3@example.com"
-	customerID := "cus_FPmKc8HFnpQM5j"
-	iter := client.Collection("users").Doc("6Qn2ZFo4jnyY8l2JK5rC").Collection("payments").Where("customerID", "==", customerID).Documents(ctx)
+	// customerID := "cus_FPmKc8HFnpQM5j"
+	q := int64(189)
+	paydata := map[string]interface{}{
+		"paymentshistory": map[string]interface{}{
+			"20190713": q,
+		},
+	}
+	payref := "users/6Qn2ZFo4jnyY8l2JK5rC/payments/PbEV8pIJ7qb8M4iLBOlu"
+	a := strings.Split(payref, "/")
+	fmt.Println(a)
+	// _, err = client.Collection("users").Doc("6Qn2ZFo4jnyY8l2JK5rC").Collection("payments").Doc("PbEV8pIJ7qb8M4iLBOlu").Set(ctx, paydata, firestore.MergeAll)
+	_, err = client.Collection(payref).Doc("PbEV8pIJ7qb8M4iLBOlu").Set(ctx, paydata, firestore.MergeAll)
+	if err != nil {
+		fmt.Println(err)
+	}
+	// iter := client.Collection("users").Doc("6Qn2ZFo4jnyY8l2JK5rC").Collection("payments").Where("customerID", "==", customerID).Documents(ctx)
 	// batchlist := make([]interface{}, 0)
 	// var batchlist []interface{}
-	for {
-		doc, err := iter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(doc.Data())
-		// d := doc.Data()["payments"]
-		// fmt.Println(doc.Ref.ID)
-		// if d != nil {
-		// 	// fmt.Println(doc.Ref.ID)
-		// 	// fmt.Println(doc.Data())
-		// 	batchlist = append(batchlist, d)
-		// }
-	}
+	// for {
+	// 	doc, err := iter.Next()
+	// 	if err == iterator.Done {
+	// 		break
+	// 	}
+	// 	if err != nil {
+	// 		log.Fatal(err)
+	// 	}
+	// 	fmt.Println(doc.Data())
+	// 	// d := doc.Data()["payments"]
+	// 	// fmt.Println(doc.Ref.ID)
+	// 	// if d != nil {
+	// 	// 	// fmt.Println(doc.Ref.ID)
+	// 	// 	// fmt.Println(doc.Data())
+	// 	// 	batchlist = append(batchlist, d)
+	// 	// }
+	// }
 	// for _, data := range batchlist {
 	// 	d := data.(map[string]interface{})
 	// 	fmt.Println(d["customerID"], d["subscriptionID"])
