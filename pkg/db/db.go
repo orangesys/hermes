@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"golang.org/x/net/context"
@@ -40,6 +41,22 @@ type UserData struct {
 var defaultCollection = "users"
 var defaultSubCollection = "payments"
 
+// func AddPaymentsHistory(ctx context.Context, client *firestore.Client, payref string, data map[string]interface{}) error {
+func AddPaymentsHistory(ctx context.Context, client *firestore.Client, payref string, sumnodes int64) error {
+	p := strings.Split(payref, "-")
+	year, month, day := time.Now().Date()
+	payhistorydate := fmt.Sprintf("%d%d%d", year, month, day)
+	data := map[string]interface{}{
+		"paymentshistory": map[string]interface{}{
+			payhistorydate: sumnodes,
+		},
+	}
+	if _, err := client.Collection(defaultCollection).Doc(p[0]).Collection(defaultSubCollection).Doc(p[1]).Set(ctx, data, firestore.MergeAll); err != nil {
+		return err
+	}
+	return nil
+}
+
 func GetBatchPaymentsList(ctx context.Context, client *firestore.Client) (map[string]interface{}, error) {
 	iter := client.Collection(defaultCollection).Where("state", "==", true).Documents(ctx)
 	// var batchlist []Payments
@@ -64,7 +81,7 @@ func GetBatchPaymentsList(ctx context.Context, client *firestore.Client) (map[st
 			if err != nil {
 				return nil, err
 			}
-			paycolPath := fmt.Sprintf("%s/%s", colPath, paydoc.Ref.ID)
+			paycolPath := fmt.Sprintf("%s-%s", doc.Ref.ID, paydoc.Ref.ID)
 			batchlist[paycolPath] = paydoc.Data()
 		}
 	}
