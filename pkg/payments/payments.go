@@ -144,7 +144,7 @@ func AddUsageRecord(subItemID, stripeCustomerID string, quantity int64) error {
 	params := &stripe.UsageRecordParams{
 		Quantity:         stripe.Int64(quantity),
 		SubscriptionItem: stripe.String(subItemID),
-		Timestamp:        stripe.Int64(time.Now().Unix()),
+		Timestamp:        stripe.Int64(time.Now().Unix() - 100),
 	}
 
 	if _, err := usagerecord.New(params); err != nil {

@@ -41,7 +41,8 @@ func registerBatch() {
 		customerid := d["customerID"].(string)
 		subscriptionid := d["subscriptionID"].(string)
 		if err := payments.AddUsageRecord(subscriptionid, customerid, q); err != nil {
-			fmt.Printf("cat not create %d usage record with %s", q, customerid)
+			fmt.Println(err)
+			// fmt.Printf("cat not create %d usage record with %s", q, customerid)
 		} else {
 			if err := db.AddPaymentsHistory(ctx, firestoreClient, payref, q); err != nil {
 				fmt.Printf("cat not add payments history to firestore: %v\n", err)
