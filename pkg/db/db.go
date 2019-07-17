@@ -13,10 +13,6 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-type Database struct {
-	client *firestore.Client
-	ctx    context.Context
-}
 type PaymentsHistory struct {
 	Date int64 `firestore:"date,omitempty"`
 }
@@ -88,7 +84,6 @@ func GetBatchPaymentsList(ctx context.Context, client *firestore.Client) (map[st
 }
 
 func AddPaymentsCollection(ctx context.Context, client *firestore.Client, email string, payments *Payments) error {
-	// defer client.Close()
 	userID, err := getUserRefIdWithEmail(ctx, client, email)
 	if err != nil {
 		return err
@@ -100,7 +95,7 @@ func AddPaymentsCollection(ctx context.Context, client *firestore.Client, email 
 	return nil
 }
 
-func UpdateUserState(ctx context.Context, client *firestore.Client, email string, data map[string]interface{}) error {
+func UpdateUserState(ctx context.Context, client *firestore.Client, email string, data map[string]interface{}, payments *Payments) error {
 	userID, err := getUserRefIdWithEmail(ctx, client, email)
 	if err != nil {
 		return err
@@ -109,11 +104,16 @@ func UpdateUserState(ctx context.Context, client *firestore.Client, email string
 	if err != nil {
 		return err
 	}
+	if payments != nil {
+		if err := AddPaymentsCollection(ctx, client, email, payments); err != nil {
+			return err
+		}
+		return nil
+	}
 	return nil
 }
 
 func getUserRefIdWithEmail(ctx context.Context, client *firestore.Client, email string) (string, error) {
-	// defer client.Close()
 	iter := client.Collection(defaultCollection).Where("email", "==", email).Documents(ctx)
 	for {
 		doc, err := iter.Next()

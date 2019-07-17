@@ -25,6 +25,8 @@ type User struct {
 	CVC         string `json:"cvc" binding:"required"`
 }
 
+var Tax8 = []string{"txr_1CLEjEAqjpfbPwVquMUKqIhH"}
+
 // deleteCustomer if card is invalid
 func deleteCustomer(stripeCustomerID string) error {
 	params := &stripe.CustomerParams{}
@@ -114,7 +116,8 @@ func AddSource(cardNumber, expMonth, expYear, cvc, stripeCustomerID string) (*st
 //Addsubscription add subscription with customer by monthly
 func Addsubscription(planID, stripeCustomerID string) (string, error) {
 	subParams := &stripe.SubscriptionParams{
-		Customer: stripe.String(stripeCustomerID),
+		Customer:        stripe.String(stripeCustomerID),
+		DefaultTaxRates: stripe.StringSlice(Tax8),
 		Items: []*stripe.SubscriptionItemsParams{
 			{
 				Plan: stripe.String(planID),
@@ -137,7 +140,6 @@ func AddUsageRecord(subItemID, stripeCustomerID string, quantity int64) error {
 		SubscriptionItem: stripe.String(subItemID),
 		Timestamp:        stripe.Int64(time.Now().Unix() - 100),
 	}
-
 	if _, err := usagerecord.New(params); err != nil {
 		return err
 	}
