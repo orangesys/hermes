@@ -27,7 +27,6 @@ type User struct {
 
 // deleteCustomer if card is invalid
 func deleteCustomer(stripeCustomerID string) error {
-	stripe.Key = os.Getenv("SECRET_KEY")
 	params := &stripe.CustomerParams{}
 	_, err := customer.Del(stripeCustomerID, params)
 	if err != nil {
@@ -58,8 +57,6 @@ func InitPayUser(u *User) (user map[string]string, err error) {
 
 // CreateCustomer with email , unique email
 func CreateCustomer(companyname, email string) (cust *stripe.Customer, err error) {
-	stripe.Key = os.Getenv("SECRET_KEY")
-
 	if err := customerIsExist(email); err != nil {
 		return nil, err
 	}
@@ -76,8 +73,6 @@ func CreateCustomer(companyname, email string) (cust *stripe.Customer, err error
 
 // customerIsExist
 func customerIsExist(email string) error {
-	stripe.Key = os.Getenv("SECRET_KEY")
-
 	params := &stripe.CustomerListParams{}
 	params.Filters.AddFilter("email", "", email)
 	i := customer.List(params)
@@ -90,8 +85,6 @@ func customerIsExist(email string) error {
 
 //AddSource is add card to customer
 func AddSource(cardNumber, expMonth, expYear, cvc, stripeCustomerID string) (*stripe.PaymentSource, error) {
-	stripe.Key = os.Getenv("SECRET_KEY")
-
 	tokenParams := &stripe.TokenParams{
 		Card: &stripe.CardParams{
 			Number:   stripe.String(cardNumber),
@@ -120,7 +113,6 @@ func AddSource(cardNumber, expMonth, expYear, cvc, stripeCustomerID string) (*st
 
 //Addsubscription add subscription with customer by monthly
 func Addsubscription(planID, stripeCustomerID string) (string, error) {
-	stripe.Key = os.Getenv("SECRET_KEY")
 	subParams := &stripe.SubscriptionParams{
 		Customer: stripe.String(stripeCustomerID),
 		Items: []*stripe.SubscriptionItemsParams{
@@ -140,7 +132,6 @@ func Addsubscription(planID, stripeCustomerID string) (string, error) {
 // PromQL:	count(node_boot_time_seconds)
 // 			count(node_boot_time_seconds)[24h:1h]
 func AddUsageRecord(subItemID, stripeCustomerID string, quantity int64) error {
-	stripe.Key = os.Getenv("SECRET_KEY")
 	params := &stripe.UsageRecordParams{
 		Quantity:         stripe.Int64(quantity),
 		SubscriptionItem: stripe.String(subItemID),
@@ -151,4 +142,8 @@ func AddUsageRecord(subItemID, stripeCustomerID string, quantity int64) error {
 		return err
 	}
 	return nil
+}
+
+func init() {
+	stripe.Key = os.Getenv("SECRET_KEY")
 }
