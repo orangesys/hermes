@@ -55,24 +55,21 @@ func AddPaymentsHistory(ctx context.Context, client *firestore.Client, payref st
 
 func GetBatchPaymentsList(ctx context.Context, client *firestore.Client) (map[string]interface{}, error) {
 	iter := client.Collection(defaultCollection).Where("state", "==", true).Documents(ctx)
-	// var batchlist []Payments
-	// batchlist := []map[string]interface{}{}
 	batchlist := make(map[string]interface{})
 	for {
 		doc, err := iter.Next()
 		if err == iterator.Done {
-			return batchlist, nil
+			break
 		}
 		if err != nil {
 			return nil, err
 		}
 		colPath := fmt.Sprintf("%s/%s/%s", defaultCollection, doc.Ref.ID, defaultSubCollection)
 		payiter := client.Collection(colPath).Where("state", "==", true).Documents(ctx)
-		// payiter := client.Collection(defaultCollection).Doc(doc.Ref.ID).Collection(defaultSubCollection).Where("state", "==", true).Documents(ctx)
 		for {
 			paydoc, err := payiter.Next()
 			if err == iterator.Done {
-				return batchlist, nil
+				break
 			}
 			if err != nil {
 				return nil, err
@@ -81,6 +78,7 @@ func GetBatchPaymentsList(ctx context.Context, client *firestore.Client) (map[st
 			batchlist[paycolPath] = paydoc.Data()
 		}
 	}
+	return batchlist, nil
 }
 
 func AddPaymentsCollection(ctx context.Context, client *firestore.Client, email string, payments *Payments) error {
