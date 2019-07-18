@@ -4,13 +4,11 @@ import (
 	// "fmt"
 	"fmt"
 	"log"
-	"strings"
 
 	"golang.org/x/net/context"
 
-	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
-	// "google.golang.org/api/iterator"
+	"google.golang.org/api/iterator"
 )
 
 func main() {
@@ -48,20 +46,50 @@ func main() {
 	// var sumNodes int64 = 146
 	// email := "hogehoge3@example.com"
 	// customerID := "cus_FPmKc8HFnpQM5j"
-	q := int64(189)
-	paydata := map[string]interface{}{
-		"paymentshistory": map[string]interface{}{
-			"20190713": q,
-		},
-	}
-	payref := "users/6Qn2ZFo4jnyY8l2JK5rC/payments/PbEV8pIJ7qb8M4iLBOlu"
-	a := strings.Split(payref, "/")
-	fmt.Println(a)
+	// q := int64(189)
+	// paydata := map[string]interface{}{
+	// 	"paymentshistory": map[string]interface{}{
+	// 		"20190713": q,
+	// 	},
+	// }
+	// payref := "users/6Qn2ZFo4jnyY8l2JK5rC/payments/PbEV8pIJ7qb8M4iLBOlu"
+	// a := strings.Split(payref, "/")
+	// fmt.Println(a)
+	var defaultCollection = "users"
+	var defaultSubCollection = "payments"
+	// batchlist := []map[string]interface{}{}
+	batchlist := make(map[string]interface{})
 	// _, err = client.Collection("users").Doc("6Qn2ZFo4jnyY8l2JK5rC").Collection("payments").Doc("PbEV8pIJ7qb8M4iLBOlu").Set(ctx, paydata, firestore.MergeAll)
-	_, err = client.Collection(payref).Doc("PbEV8pIJ7qb8M4iLBOlu").Set(ctx, paydata, firestore.MergeAll)
-	if err != nil {
-		fmt.Println(err)
+	iter := client.Collection(defaultCollection).Where("state", "==", true).Documents(ctx)
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			fmt.Println(err)
+		}
+		// fmt.Println(doc.Data())
+		colPath := fmt.Sprintf("%s/%s/%s", defaultCollection, doc.Ref.ID, defaultSubCollection)
+		payiter := client.Collection(colPath).Where("state", "==", true).Documents(ctx)
+		for {
+			paydoc, err := payiter.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				fmt.Println(err)
+			}
+			// batchlist = append(batchlist, paydoc.Data())
+			paycolPath := fmt.Sprintf("%s-%s", doc.Ref.ID, paydoc.Ref.ID)
+			batchlist[paycolPath] = paydoc.Data()
+		}
 	}
+
+	for i, b := range batchlist {
+		fmt.Println(i, b)
+	}
+
 	// iter := client.Collection("users").Doc("6Qn2ZFo4jnyY8l2JK5rC").Collection("payments").Where("customerID", "==", customerID).Documents(ctx)
 	// batchlist := make([]interface{}, 0)
 	// var batchlist []interface{}

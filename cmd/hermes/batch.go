@@ -25,15 +25,12 @@ func registerBatch() {
 
 	server := "http://127.0.0.1:9090"
 	sumNodes := billing.CountNodesFromQuerier(server)
-	// fmt.Println(sumNodes)
-	batchlist, err := db.GetBatchPaymentsList(ctx, firestoreClient)
+	paymentsbatchlist, err := db.GetBatchPaymentsList(ctx, firestoreClient)
 	if err != nil {
 		fmt.Printf("can not cat batch payments list: %v\n", err)
 	}
 
-	for payref, data := range batchlist {
-		// fmt.Println(payref)
-		// fmt.Println(data)
+	for payref, data := range paymentsbatchlist {
 		d := data.(map[string]interface{})
 
 		// fmt.Println(d["customerID"], d["subscriptionID"])
@@ -41,8 +38,7 @@ func registerBatch() {
 		customerid := d["customerID"].(string)
 		subscriptionid := d["subscriptionID"].(string)
 		if err := payments.AddUsageRecord(subscriptionid, customerid, q); err != nil {
-			fmt.Printf("can not add usage record: %v\n", err)
-			// fmt.Printf("cat not create %d usage record with %s", q, customerid)
+			fmt.Printf("can not add %d nodes usage record to %s customerID : %v\n", q, customerid, err)
 		} else {
 			if err := db.AddPaymentsHistory(ctx, firestoreClient, payref, q); err != nil {
 				fmt.Printf("cat not add payments history to firestore: %v\n", err)
