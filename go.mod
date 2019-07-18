@@ -13,6 +13,7 @@ require (
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mattn/go-isatty v0.0.8 // indirect
 	github.com/satori/go.uuid v1.2.0
+	github.com/stretchr/testify v1.3.0
 	github.com/stripe/stripe-go v61.16.0+incompatible
 	github.com/ugorji/go v1.1.7 // indirect
 	golang.org/x/net v0.0.0-20190628185345-da137c7871d7
