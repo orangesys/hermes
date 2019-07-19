@@ -52,8 +52,12 @@ func CreateUser(c *gin.Context) {
 		})
 		return
 	}
-	ctx := context.Background()
-	if err := db.UpdateUserState(ctx, firestoreClient, u.Email, userdata, payments); err != nil {
+	fs := db.FirestoreClientImpl{
+		context.Background(),
+		firestoreClient,
+	}
+	// ctx := context.Background()
+	if err := fs.UpdateUserState(u.Email, userdata, payments); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"messages": err.Error(),
 		})

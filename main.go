@@ -4,12 +4,25 @@ import (
 	// "fmt"
 	"fmt"
 	"log"
+	"time"
 
 	"golang.org/x/net/context"
 
 	firebase "firebase.google.com/go"
-	"google.golang.org/api/iterator"
 )
+
+type PaymentsHistory struct {
+	Date int64 `firestore:"date,omitempty"`
+}
+
+type Payments struct {
+	PlanID          string    `firestore:"planID,omitempty"`
+	CustomerID      string    `firestore:"customerID,omitempty"`
+	SubscriptionID  string    `firestore:"subscriptionID,omitempty"`
+	StartDate       time.Time `firestore:"startDate,omitempty"`
+	State           bool      `firestore:"state,omitempty"`
+	paymentshistory PaymentsHistory
+}
 
 func main() {
 	ctx := context.Background()
@@ -56,39 +69,47 @@ func main() {
 	// a := strings.Split(payref, "/")
 	// fmt.Println(a)
 	var defaultCollection = "users"
-	var defaultSubCollection = "payments"
-	// batchlist := []map[string]interface{}{}
-	batchlist := make(map[string]interface{})
+	// var defaultSubCollection = "payments"
+	// // batchlist := []map[string]interface{}{}
+	// batchlist := make(map[string]interface{})
 	// _, err = client.Collection("users").Doc("6Qn2ZFo4jnyY8l2JK5rC").Collection("payments").Doc("PbEV8pIJ7qb8M4iLBOlu").Set(ctx, paydata, firestore.MergeAll)
-	iter := client.Collection(defaultCollection).Where("state", "==", true).Documents(ctx)
-	for {
-		doc, err := iter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			fmt.Println(err)
-		}
-		// fmt.Println(doc.Data())
-		colPath := fmt.Sprintf("%s/%s/%s", defaultCollection, doc.Ref.ID, defaultSubCollection)
-		payiter := client.Collection(colPath).Where("state", "==", true).Documents(ctx)
-		for {
-			paydoc, err := payiter.Next()
-			if err == iterator.Done {
-				break
-			}
-			if err != nil {
-				fmt.Println(err)
-			}
-			// batchlist = append(batchlist, paydoc.Data())
-			paycolPath := fmt.Sprintf("%s-%s", doc.Ref.ID, paydoc.Ref.ID)
-			batchlist[paycolPath] = paydoc.Data()
-		}
-	}
+	dsnap, _ := client.Collection(defaultCollection).Doc("WJ1oSC5PxHdF9rHZHvXL").Collection("payments").Doc("RKnvdEe4DOOX38AwAYhy").Get(ctx)
+	// query := users.Where("paymentshistory", "array-contains", "2019718").Documents(ctx)
+	// fmt.Println(query)
+	m := dsnap.Data()["paymentshistory"].(map[string]interface{})["2019718"]
+	// fmt.Printf("Document data: %#v\n", m["paymentshistory"])
+	// n := m["paymentshistory"].(map[string]interface{})
+	fmt.Println(m)
 
-	for i, b := range batchlist {
-		fmt.Println(i, b)
-	}
+	// for {
+	// 	doc, err := iters.Next()
+	// 	if err == iterator.Done {
+	// 		break
+	// 	}
+	// 	if err != nil {
+	// 		fmt.Println(err)
+	// 	}
+	// 	fmt.Println(doc.Data())
+	// 	// colPath := fmt.Sprintf("%s/%s/%s", defaultCollection, doc.Ref.ID, defaultSubCollection)
+	// 	// // payiter := client.Collection(colPath).Where("state", "==", true).Documents(ctx)
+	// 	// payiter := client.Collection(colPath).Where("2019718").Documents(ctx)
+	// 	// for {
+	// 	// 	paydoc, err := payiter.Next()
+	// 	// 	if err == iterator.Done {
+	// 	// 		break
+	// 	// 	}
+	// 	// 	if err != nil {
+	// 	// 		fmt.Println(err)
+	// 	// 	}
+	// 	// 	// batchlist = append(batchlist, paydoc.Data())
+	// 	// 	paycolPath := fmt.Sprintf("%s-%s", doc.Ref.ID, paydoc.Ref.ID)
+	// 	// 	batchlist[paycolPath] = paydoc.Data()
+	// 	// }
+	// }
+
+	// for i, b := range batchlist {
+	// 	fmt.Println(i, b)
+	// }
 
 	// iter := client.Collection("users").Doc("6Qn2ZFo4jnyY8l2JK5rC").Collection("payments").Where("customerID", "==", customerID).Documents(ctx)
 	// batchlist := make([]interface{}, 0)

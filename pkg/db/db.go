@@ -13,6 +13,11 @@ import (
 	"google.golang.org/api/iterator"
 )
 
+type FirestoreClientImpl struct {
+	context.Context
+	*firestore.Client
+}
+
 type PaymentsHistory struct {
 	Date int64 `firestore:"date,omitempty"`
 }
@@ -37,24 +42,34 @@ type UserData struct {
 var defaultCollection = "users"
 var defaultSubCollection = "payments"
 
-// func AddPaymentsHistory(ctx context.Context, client *firestore.Client, payref string, data map[string]interface{}) error {
-func AddPaymentsHistory(ctx context.Context, client *firestore.Client, payref string, sumnodes int64) error {
-	p := strings.Split(payref, "-")
-	year, month, day := time.Now().Date()
-	payhistorydate := fmt.Sprintf("%d%d%d", year, month, day)
+// checkPaymentsHistory
+// func PaymentsHistoryIsExist(ctx context.Context, client *firestore.Client, payref string, sumnodes int64) bool {
+func (f *FirestoreClientImpl) PaymentsHistoryIsExist(payref string, sumnodes int64) bool {
+	p := strings.Split(payref, "/")
+	year, month, day := time.Now().AddDate(0, 0, -1).Date()
+	payhistorydate := fmt.Sprintf("%d%02d%02d", year, month, day)
+	paymentshistory, _ := f.Collection(defaultCollection).Doc(p[0]).Collection(defaultSubCollection).Doc(p[1]).Get(f.Context)
+	return paymentshistory.Data()["paymentshistory"].(map[string]interface{})[payhistorydate] == sumnodes
+}
+
+// AddPaymentsHistory(ctx context.Context, client *firestore.Client, payref string, data map[string]interface{}) error {
+func (f *FirestoreClientImpl) AddPaymentsHistory(payref string, sumnodes int64) error {
+	p := strings.Split(payref, "/")
+	year, month, day := time.Now().AddDate(0, 0, -1).Date()
+	payhistorydate := fmt.Sprintf("%d%02d%02d", year, month, day)
 	data := map[string]interface{}{
 		"paymentshistory": map[string]interface{}{
 			payhistorydate: sumnodes,
 		},
 	}
-	if _, err := client.Collection(defaultCollection).Doc(p[0]).Collection(defaultSubCollection).Doc(p[1]).Set(ctx, data, firestore.MergeAll); err != nil {
+	if _, err := f.Collection(defaultCollection).Doc(p[0]).Collection(defaultSubCollection).Doc(p[1]).Set(f.Context, data, firestore.MergeAll); err != nil {
 		return err
 	}
 	return nil
 }
 
-func GetBatchPaymentsList(ctx context.Context, client *firestore.Client) (map[string]interface{}, error) {
-	iter := client.Collection(defaultCollection).Where("state", "==", true).Documents(ctx)
+func (f *FirestoreClientImpl) GetBatchPaymentsList() (map[string]interface{}, error) {
+	iter := f.Collection(defaultCollection).Where("state", "==", true).Documents(f.Context)
 	batchlist := make(map[string]interface{})
 	for {
 		doc, err := iter.Next()
@@ -65,7 +80,7 @@ func GetBatchPaymentsList(ctx context.Context, client *firestore.Client) (map[st
 			return nil, err
 		}
 		colPath := fmt.Sprintf("%s/%s/%s", defaultCollection, doc.Ref.ID, defaultSubCollection)
-		payiter := client.Collection(colPath).Where("state", "==", true).Documents(ctx)
+		payiter := f.Collection(colPath).Where("state", "==", true).Documents(f.Context)
 		for {
 			paydoc, err := payiter.Next()
 			if err == iterator.Done {
@@ -74,36 +89,36 @@ func GetBatchPaymentsList(ctx context.Context, client *firestore.Client) (map[st
 			if err != nil {
 				return nil, err
 			}
-			paycolPath := fmt.Sprintf("%s-%s", doc.Ref.ID, paydoc.Ref.ID)
+			paycolPath := fmt.Sprintf("%s/%s", doc.Ref.ID, paydoc.Ref.ID)
 			batchlist[paycolPath] = paydoc.Data()
 		}
 	}
 	return batchlist, nil
 }
 
-func AddPaymentsCollection(ctx context.Context, client *firestore.Client, email string, payments *Payments) error {
-	userID, err := getUserRefIdWithEmail(ctx, client, email)
+func (f *FirestoreClientImpl) AddPaymentsCollection(email string, payments *Payments) error {
+	userID, err := f.GetUserRefIdWithEmail(email)
 	if err != nil {
 		return err
 	}
-	_, _, err = client.Collection(defaultCollection).Doc(userID).Collection(defaultSubCollection).Add(ctx, payments)
+	_, _, err = f.Collection(defaultCollection).Doc(userID).Collection(defaultSubCollection).Add(f.Context, payments)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func UpdateUserState(ctx context.Context, client *firestore.Client, email string, data map[string]interface{}, payments *Payments) error {
-	userID, err := getUserRefIdWithEmail(ctx, client, email)
+func (f *FirestoreClientImpl) UpdateUserState(email string, data map[string]interface{}, payments *Payments) error {
+	userID, err := f.GetUserRefIdWithEmail(email)
 	if err != nil {
 		return err
 	}
-	_, err = client.Collection("users").Doc(userID).Set(ctx, data, firestore.MergeAll)
+	_, err = f.Collection(defaultCollection).Doc(userID).Set(f.Context, data, firestore.MergeAll)
 	if err != nil {
 		return err
 	}
 	if payments != nil {
-		if err := AddPaymentsCollection(ctx, client, email, payments); err != nil {
+		if err := f.AddPaymentsCollection(email, payments); err != nil {
 			return err
 		}
 		return nil
@@ -111,8 +126,8 @@ func UpdateUserState(ctx context.Context, client *firestore.Client, email string
 	return nil
 }
 
-func getUserRefIdWithEmail(ctx context.Context, client *firestore.Client, email string) (string, error) {
-	iter := client.Collection(defaultCollection).Where("email", "==", email).Documents(ctx)
+func (f *FirestoreClientImpl) GetUserRefIdWithEmail(email string) (string, error) {
+	iter := f.Collection(defaultCollection).Where("email", "==", email).Documents(f.Context)
 	for {
 		doc, err := iter.Next()
 		if err == iterator.Done {
