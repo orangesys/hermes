@@ -1,0 +1,15 @@
+FROM golang:1.12.5-alpine3.9 as builder
+
+ADD . $GOPATH/src/github.com/orangesys/janus
+WORKDIR $GOPATH/src/github.com/orangesys/janus
+
+RUN apk update && apk upgrade && apk add --no-cache alpine-sdk
+
+RUN git update-index --refresh; make build
+# -----------------------------------------------------------------------------
+FROM quay.io/prometheus/busybox:latest
+LABEL maintainer="gavin.zhou@gmail.com"
+
+COPY janus /bin/janus
+
+ENTRYPOINT [ "/bin/janus" ]
