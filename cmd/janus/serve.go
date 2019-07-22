@@ -7,7 +7,7 @@ import (
 
 	// "github.com/prometheus/common/version"
 
-	"github.com/orangesys/hermes/routers"
+	"github.com/orangesys/janus/routers"
 )
 
 func registerServe() {

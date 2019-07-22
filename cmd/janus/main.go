@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	// app    = kingpin.New("hermes", "hermes command for orangesys")
-	serve = kingpin.Command("serve", "hermes serve for orangesys")
+	// app    = kingpin.New("janus", "janus command for orangesys")
+	serve = kingpin.Command("serve", "janus serve for orangesys")
 
 	batch = kingpin.Command("batch", "batch is create usage record to stripe")
 )

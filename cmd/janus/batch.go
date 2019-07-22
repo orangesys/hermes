@@ -6,9 +6,9 @@ import (
 
 	"golang.org/x/net/context"
 
-	"github.com/orangesys/hermes/pkg/billing"
-	"github.com/orangesys/hermes/pkg/db"
-	"github.com/orangesys/hermes/pkg/payments"
+	"github.com/orangesys/janus/pkg/billing"
+	"github.com/orangesys/janus/pkg/db"
+	"github.com/orangesys/janus/pkg/payments"
 )
 
 func registerBatch() {

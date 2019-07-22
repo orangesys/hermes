@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/orangesys/hermes/pkg/promql"
-	"github.com/orangesys/hermes/pkg/util"
+	"github.com/orangesys/janus/pkg/promql"
+	"github.com/orangesys/janus/pkg/util"
 )
 
 func CountNodesFromQuerier(addr string) float64 {

@@ -8,8 +8,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/orangesys/hermes/pkg/db"
-	"github.com/orangesys/hermes/pkg/payments"
+	"github.com/orangesys/janus/pkg/db"
+	"github.com/orangesys/janus/pkg/payments"
 )
 
 func CreateUser(c *gin.Context) {

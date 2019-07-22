@@ -1,6 +1,6 @@
-# Hermes
+# Janus
 
-heremes is orangesys api
+janus is orangesys api
 
 ```sh
 cp .env-sample .env
