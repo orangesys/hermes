@@ -5,3 +5,15 @@ steps:
 - id: 'push'
   name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'asia.gcr.io/$PROJECT_ID/janus:$SHORT_SHA']
+- id: 'deploy'
+  name: 'gcr.io/cloud-builders/kubectl'
+  args: ['set', 'image', 'deployment/janus-server', 'janus-server=asia.gcr.io/$PROJECT_ID/janus:$SHORT_SHA', '-n', 'thanos']
+  env:
+  - 'CLOUDSDK_COMPUTE_ZONE=asia-northeast1-c'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=orangesys-io'
+- id: 'deploy'
+  name: 'gcr.io/cloud-builders/kubectl'
+  args: ['set', 'image', 'cronjobs/janus-batch', 'janus-batch=asia.gcr.io/$PROJECT_ID/janus:$SHORT_SHA', '-n', 'thanos']
+  env:
+  - 'CLOUDSDK_COMPUTE_ZONE=asia-northeast1-c'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=orangesys-io'  

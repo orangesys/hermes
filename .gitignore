@@ -1,2 +1,4 @@
 .env
 firebase-iam.json
+hack/k8s/cronjob.yaml
+hack/k8s/janus-deployment.yaml
