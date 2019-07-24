@@ -21,11 +21,6 @@ func registerBatch() {
 		log.Fatalf("error initializing firestore client: %v\n", err)
 	}
 
-	// ctx := context.Background()
-
-	server := "http://127.0.0.1:9090"
-	sumNodes := billing.CountNodesFromQuerier(server)
-
 	fs := db.FirestoreClientImpl{
 		context.Background(),
 		firestoreClient,
@@ -38,10 +33,9 @@ func registerBatch() {
 	for payref, data := range paymentsbatchlist {
 		d := data.(map[string]interface{})
 
-		// fmt.Println(d["customerID"], d["subscriptionID"])
-		q := int64(sumNodes)
+		server := fmt.Sprintf("http://thanos-querier.%s.svc.cluster.local:9090", d["namespace"])
+		q := int64(billing.CountNodesFromQuerier(server))
 
-		// if db.PaymentsHistoryIsExist(ctx, firestoreClient, payref, q) {
 		if fs.PaymentsHistoryIsExist(payref, q) {
 			fmt.Println("Had payment record in payment history")
 			continue

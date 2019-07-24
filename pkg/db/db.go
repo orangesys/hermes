@@ -89,6 +89,10 @@ func (f *FirestoreClientImpl) GetBatchPaymentsList() (map[string]interface{}, er
 			if err != nil {
 				return nil, err
 			}
+			if paydoc.Data()["namespace"] == nil {
+				fmt.Printf("namespace is nil, please check firestore payments, Ref ID is %s\n", paydoc.Ref.ID)
+				break
+			}
 			paycolPath := fmt.Sprintf("%s/%s", doc.Ref.ID, paydoc.Ref.ID)
 			batchlist[paycolPath] = paydoc.Data()
 		}
