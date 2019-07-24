@@ -23,6 +23,7 @@ type User struct {
 	ExpMonth    string `json:"expmonth" binding:"required"`
 	ExpYear     string `json:"expyear" binding:"required"`
 	CVC         string `json:"cvc" binding:"required"`
+	SubDomain   string `json:"subdomain" binding:"required"`
 }
 
 var Tax8 = []string{"txr_1CLEjEAqjpfbPwVquMUKqIhH"}

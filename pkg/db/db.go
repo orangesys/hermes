@@ -28,6 +28,7 @@ type Payments struct {
 	SubscriptionID string    `firestore:"subscriptionID,omitempty"`
 	StartDate      time.Time `firestore:"startDate,omitempty"`
 	State          bool      `firestore:"state,omitempty"`
+	Namespace      string    `firestore:"namespace,omitempty"`
 }
 
 type UserData struct {

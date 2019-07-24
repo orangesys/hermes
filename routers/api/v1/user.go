@@ -33,6 +33,7 @@ func CreateUser(c *gin.Context) {
 		SubscriptionID: initUser["subItemID"],
 		StartDate:      time.Now(),
 		State:          state,
+		Namespace:      u.SubDomain,
 	}
 
 	userdata := map[string]interface{}{
