@@ -39,15 +39,15 @@ func deleteCustomer(stripeCustomerID string) error {
 }
 
 // InitPayUser is create new user and add source
-func InitPayUser(u *User) (user map[string]string, err error) {
-	cus, err := CreateCustomer(u.CompanyName, u.Email)
+func (u *User) InitPayUser() (user map[string]string, err error) {
+	cus, err := u.CreateCustomer()
 	if err != nil {
 		return user, err
 	}
-	if _, err := AddSource(u.CardNumber, u.ExpMonth, u.ExpYear, u.CVC, cus.ID); err != nil {
+	if _, err := u.AddSource(cus.ID); err != nil {
 		return user, err
 	}
-	subItemID, err := Addsubscription(u.PlanID, cus.ID)
+	subItemID, err := u.Addsubscription(cus.ID)
 	if err != nil {
 		return user, err
 	}
@@ -59,13 +59,13 @@ func InitPayUser(u *User) (user map[string]string, err error) {
 }
 
 // CreateCustomer with email , unique email
-func CreateCustomer(companyname, email string) (cust *stripe.Customer, err error) {
-	if err := customerIsExist(email); err != nil {
+func (u *User) CreateCustomer() (cust *stripe.Customer, err error) {
+	if err := customerIsExist(u.Email); err != nil {
 		return nil, err
 	}
 	newCustomerParams := &stripe.CustomerParams{
-		Name:  stripe.String(companyname),
-		Email: stripe.String(email),
+		Name:  stripe.String(u.CompanyName),
+		Email: stripe.String(u.Email),
 	}
 
 	if cust, err = customer.New(newCustomerParams); err != nil {
@@ -87,13 +87,13 @@ func customerIsExist(email string) error {
 }
 
 //AddSource is add card to customer
-func AddSource(cardNumber, expMonth, expYear, cvc, stripeCustomerID string) (*stripe.PaymentSource, error) {
+func (u *User) AddSource(stripeCustomerID string) (*stripe.PaymentSource, error) {
 	tokenParams := &stripe.TokenParams{
 		Card: &stripe.CardParams{
-			Number:   stripe.String(cardNumber),
-			ExpMonth: stripe.String(expMonth),
-			ExpYear:  stripe.String(expYear),
-			CVC:      stripe.String(cvc),
+			Number:   stripe.String(u.CardNumber),
+			ExpMonth: stripe.String(u.ExpMonth),
+			ExpYear:  stripe.String(u.ExpYear),
+			CVC:      stripe.String(u.CVC),
 		},
 	}
 	t, err := token.New(tokenParams)
@@ -115,13 +115,13 @@ func AddSource(cardNumber, expMonth, expYear, cvc, stripeCustomerID string) (*st
 }
 
 //Addsubscription add subscription with customer by monthly
-func Addsubscription(planID, stripeCustomerID string) (string, error) {
+func (u *User) Addsubscription(stripeCustomerID string) (string, error) {
 	subParams := &stripe.SubscriptionParams{
 		Customer:        stripe.String(stripeCustomerID),
 		DefaultTaxRates: stripe.StringSlice(Tax8),
 		Items: []*stripe.SubscriptionItemsParams{
 			{
-				Plan: stripe.String(planID),
+				Plan: stripe.String(u.PlanID),
 			},
 		},
 	}

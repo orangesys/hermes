@@ -17,7 +17,8 @@ func CreateUser(c *gin.Context) {
 	if err := c.ShouldBindJSON(&u); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
-	initUser, err := payments.InitPayUser(&u)
+	// initUser, err := payments.InitPayUser(&u)
+	initUser, err := u.InitPayUser()
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{
