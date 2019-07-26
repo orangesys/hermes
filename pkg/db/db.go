@@ -44,16 +44,17 @@ var defaultCollection = "users"
 var defaultSubCollection = "payments"
 
 // checkPaymentsHistory
-// func PaymentsHistoryIsExist(ctx context.Context, client *firestore.Client, payref string, sumnodes int64) bool {
 func (f *FirestoreClientImpl) PaymentsHistoryIsExist(payref string, sumnodes int64) bool {
 	p := strings.Split(payref, "/")
 	year, month, day := time.Now().AddDate(0, 0, -1).Date()
 	payhistorydate := fmt.Sprintf("%d%02d%02d", year, month, day)
 	paymentshistory, _ := f.Collection(defaultCollection).Doc(p[0]).Collection(defaultSubCollection).Doc(p[1]).Get(f.Context)
+	if paymentshistory.Data()["paymentshistory"] == nil {
+		return false
+	}
 	return paymentshistory.Data()["paymentshistory"].(map[string]interface{})[payhistorydate] == sumnodes
 }
 
-// AddPaymentsHistory(ctx context.Context, client *firestore.Client, payref string, data map[string]interface{}) error {
 func (f *FirestoreClientImpl) AddPaymentsHistory(payref string, sumnodes int64) error {
 	p := strings.Split(payref, "/")
 	year, month, day := time.Now().AddDate(0, 0, -1).Date()

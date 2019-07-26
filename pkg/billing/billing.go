@@ -15,7 +15,6 @@ func CountNodesFromQuerier(addr string) float64 {
 	// count prometheus server with usage record
 	// count(kube_pod_start_time{pod=~"prometheus-k8s.*"})
 	query := "count(node_boot_time_seconds)"
-	// server := "http://127.0.0.1:9090"
 
 	prom, err := promql.NewClient(addr)
 	if err != nil {
